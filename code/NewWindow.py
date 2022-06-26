@@ -10,6 +10,7 @@ import time
 from face_normalize import FaceNormalize
 from get_face_img import GetFaceImg
 from assure_path import assure_path_exists
+from create_dataset import Dataset
 
 ######################################### 函数 ################################################
 def TakeImages():
@@ -50,14 +51,20 @@ def TakeImages():
             res = "Enter correct name"
             message.configure(text=res)  ####提示信息
 
-def psw():
+def ImgModel():
     global Id
+    # 图像归一化
     face_normalize = FaceNormalize()
     face_normalize.run(Id)
+    #加载数据集
+    dataset = Dataset()
+    dataset.load_dataset()
+    dataset.prepare_dataset()
 
-def TrackImages():
-    pass
-
+#考勤
+def Attendance():
+    predict = Predict()
+    predict.run()
 
 def tick():
     time_string = time.strftime('%H:%M:%S')
@@ -146,7 +153,7 @@ r1.place(x=330, y=315)
 r2 = tk.Radiobutton(window, text='女', variable=var, value='woman', bg="pink", font=('times', 13, ' bold '))
 r2.place(x=405, y=315)
 
-message1 = tk.Label(frame2, text="1)人脸录入  >>>  2)信息保存",bg="pink" ,fg="black" , width=39, height=1,
+message1 = tk.Label(frame2, text="1)人脸录入  >>>  2)创建模型",bg="pink" ,fg="black" , width=39, height=1,
                     activebackground="yellow", font=('times', 15, ' bold '))
 message1.place(x=7, y=260)
 
@@ -193,10 +200,10 @@ tv.configure(yscrollcommand=scroll.set)
 
 takeImg = tk.Button(frame2, text="人脸录入", command=TakeImages,fg="black"  ,bg="HotPink", width=34, height=1,
                     activebackground="white", font=('times', 15, ' bold '))
-takeImg.place(x=30, y=320)
-trainImg = tk.Button(frame2, text="信息保存", command=psw, fg="black"  ,bg="HotPink", width=34, height=1,
+takeImg.place(x=50, y=320)
+Modeling = tk.Button(frame2, text="创建模型", command=ImgModel, fg="black"  ,bg="HotPink", width=34, height=1,
                      activebackground="white", font=('times', 15, ' bold '))
-trainImg.place(x=30, y=380)
+Modeling.place(x=50, y=380)
 trackImg = tk.Button(frame1, text="点击考勤", command=TrackImages,fg="black"  ,bg="HotPink", width=35, height=1,
                      activebackground="white", font=('times', 15, ' bold '))
 trackImg.place(x=30, y=50)
