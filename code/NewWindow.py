@@ -60,11 +60,16 @@ def ImgModel():
     dataset = Dataset()
     dataset.load_dataset()
     dataset.prepare_dataset()
+    model = Model()
+    model.build_model(dataset)
+    model.train_model(dataset)
+    model.evaluate_model(dataset)
+    assure_path_exists('../data/model/')
+    model.save_model('../data/model/model.h5')
 
 #考勤
 def Attendance():
-    predict = Predict()
-    predict.run()
+    pass
 
 def tick():
     time_string = time.strftime('%H:%M:%S')
