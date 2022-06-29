@@ -68,8 +68,76 @@ def ImgModel():
     model.save_model('../data/model/model.h5')
 
 #考勤
-def Attendance():
-    pass
+def attendance():
+    assure_path_exists("../data/Attendance/")
+    assure_path_exists("../data/StudentDetails/")
+    # 清空界面原有考勤数据
+    for k in tv.get_children():
+        tv.delete(k)
+    col_names = ['Id', '', 'Name', '', 'Date', '', 'Time']  # 考勤表列名
+    exists1 = os.path.isfile("..\data\StudentDetails\StudentDetails.csv")
+    if exists1:
+        df = pd.read_csv("..\data\StudentDetails\StudentDetails.csv")
+        recognition = Recognition()
+        recognition.run()  # 运行人脸识别程序
+        if not recognition.get_name_flag:  # 成功识别出人脸
+            i = 1
+            recognized_name = [int(recognition.my_name)]  # 将人员ID提取出来
+            while i <= res:  # 对表中数据依次比对
+                if recognized_name == df.loc[df['SERIAL NO.'] == i]['ID'].values:
+                    serial = i  # 人脸识别结果的ID对应的学生在表中序号
+                    break
+                else:
+                    i = i + 1
+            ts = time.time()  # 获得当前时间
+            date = datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y')  # 年月日
+            timeStamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')  # 时分秒
+            aa = df.loc[df['SERIAL NO.'] == serial]['NAME'].values
+            ID = df.loc[df['SERIAL NO.'] == serial]['ID'].values
+            ID = str(ID)
+            ID = ID[1:-1]
+            bb = str(aa)
+            bb = bb[2:-2]
+            attendance = [str(ID), '', bb, '', str(date), '', str(timeStamp)]
+        ts = time.time()
+        date = datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y')
+        exists = os.path.isfile("..\data\Attendance\Attendance_" + date + ".csv")
+        if exists:
+            # 存在当日考勤数据
+            with open("..\data\Attendance\Attendance_" + date + ".csv", 'a+') as csvFile1:
+                writer = csv.writer(csvFile1)
+                writer.writerow(attendance)
+            csvFile1.close()
+        else:
+            # 不存在当日考勤数据
+            with open("..\data\Attendance\Attendance_" + date + ".csv", 'a+') as csvFile1:
+                writer = csv.writer(csvFile1)
+                writer.writerow(col_names)  # 先加入列名
+                writer.writerow(attendance)
+            csvFile1.close()
+        j = 0
+        space1 = ''
+        space2 = '       '
+        space3 = '         '
+        with open("..\data\Attendance\Attendance_" + date + ".csv", 'r') as csvFile1:
+            reader1 = csv.reader(csvFile1)
+            # 将当日所有考勤信息输出到界面
+            for lines in reader1:
+                j = j + 1
+                if (j > 1):
+                    if (j % 2 != 0):
+                        iidd = '  '+ str(lines[0]) + '   '
+                        i = 0
+                        count = 16 - len(str(lines[2]))
+                        while i < count:
+                            space1 += ' '
+                            i = i + 1
+                        tv.insert('', 0, text=iidd, values=(space1+str(lines[2]), str(space2+lines[4]), str(space3+lines[6])))
+                        space1 = ''  # 重置
+        csvFile1.close()
+    else:
+        mess._show(title='信息丢失', message='学生信息丢失，请进行检查!')
+        window.destroy()
 
 def tick():
     time_string = time.strftime('%H:%M:%S')
@@ -209,7 +277,7 @@ takeImg.place(x=50, y=320)
 Modeling = tk.Button(frame2, text="创建模型", command=ImgModel, fg="black"  ,bg="HotPink", width=34, height=1,
                      activebackground="white", font=('times', 15, ' bold '))
 Modeling.place(x=50, y=380)
-trackImg = tk.Button(frame1, text="点击考勤", command=TrackImages,fg="black"  ,bg="HotPink", width=35, height=1,
+trackImg = tk.Button(frame1, text="点击考勤", command=attendance,fg="black"  ,bg="HotPink", width=35, height=1,
                      activebackground="white", font=('times', 15, ' bold '))
 trackImg.place(x=30, y=50)
 quitWindow = tk.Button(frame1, text="退出", command=window.destroy, fg="black"  ,bg="HotPink", width=35, height=1,
