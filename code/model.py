@@ -1,11 +1,7 @@
-import numpy as np
-import tensorflow
 import keras
 from keras.optimizers import SGD
-
-from load_data import Dataset
+from create_dataset import Dataset
 from assure_path import assure_path_exists
-from keras.preprocessing.image import ImageDataGenerator
 
 class Model:
     def __init__(self):
@@ -21,19 +17,17 @@ class Model:
         model.add(keras.layers.Convolution2D(32, (3, 3), activation='relu'))
 
         model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))##池化层
-        model.add(keras.layers.Dropout(0.25)) #Dropout层
 
         model.add(keras.layers.Convolution2D(64, (3, 3), padding='same', activation='relu'))
 
         model.add(keras.layers.Convolution2D(64, (3, 3), activation='relu'))
 
         model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-        model.add(keras.layers.Dropout(0.25))
 
         model.add(keras.layers.Flatten()) ##展平层
-        model.add(keras.layers.Dense(512, activation='relu'))
 
-        model.add(keras.layers.Dropout(0.5))
+        model.add(keras.layers.Dropout(0.5))#Dropout层,防止过拟合，提升模型泛化能力
+
         model.add(keras.layers.Dense(dataset.class_num, activation='softmax'))#全连接网络层（神经元个数，激活函数），进行分类输出
 
         self.model = model
@@ -42,7 +36,7 @@ class Model:
     def train_model(self, dataset, batch_size=20, epoch=10):
         ##batch_size:每次梯度更新的样本数  epoch:训练模型迭代轮次
         sgd = SGD(lr=0.0007, decay=1e-6, momentum=0.9, nesterov=True)
-        #.compile()来配置训练方法
+        #.compile()来配置训练方法，（损失函数，优化器，准确率评测标准）
         self.model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
         #实例化一个ImageDataGenerator(图片生成器类)
         datagen = keras.preprocessing.image.ImageDataGenerator(
@@ -56,13 +50,9 @@ class Model:
             height_shift_range=0.2,  # 同上，只不过这里是垂直
             horizontal_flip=True,  # 是否进行随机水平翻转
             vertical_flip=False)  # 是否进行随机垂直翻转
-        ##用fit()函数进行训练
-        datagen.fit(dataset.train_images)
-        #fit()函数训练时，将全部训练集载入显存之后，才开始分批训练，很容易超出显存容量
-        #解决方法是：用fit_generator()函数进行训练，它将训练集分批载入显存
+        #用fit_generator()函数进行训练，它将训练集分批载入显存
         self.model.fit_generator(datagen.flow(dataset.train_images, dataset.train_labels,
                                  batch_size=batch_size),
-                                 # samples_per_epoch=dataset.train_images.shape[0],
                                  #steps_per_epoch：整数，当生成器返回steps_per_epoch次数据时记一个epoch结束
                                  steps_per_epoch=dataset.train_images.shape[0] / batch_size,
                                  #epoch：数据迭代的轮数
@@ -75,7 +65,6 @@ class Model:
 
     def save_model(self, model_path):
         self.model.save(model_path)
-
 
 if __name__ == '__main__':
     dataset = Dataset()
