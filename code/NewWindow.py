@@ -1,16 +1,26 @@
+'''
+Created on 2022年6月17日
+@author: LiJing、DingPan
+@description: 本程序为人脸考勤系统界面
+@version: 1.6
+@copyright: cqut11903991020、cqut11903991019
+'''
 ############################################# IMPORTING ################################################
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox as mess  ###消息对话框
-import cv2, os
+import os
 import csv  ###处理csv文件
 import datetime
 import time
+import pandas as pd
 
 from face_normalize import FaceNormalize
 from get_face_img import GetFaceImg
 from assure_path import assure_path_exists
 from create_dataset import Dataset
+from model import Model
+from face_recognition import Recognition
 
 ######################################### 函数 ################################################
 def TakeImages():
@@ -139,11 +149,48 @@ def attendance():
         mess._show(title='信息丢失', message='学生信息丢失，请进行检查!')
         window.destroy()
 
+###查询
+def select():
+    def select_attendance():
+        new_year = year.get()
+        new_month = month.get()
+        new_day = day.get()
+        new_name = name.get()
+        time = "{}-{}-{}".format(new_day, new_month, new_year)
+        exists = os.path.isfile("..\data\Attendance\Attendance_" + time + ".csv")
+        if exists:
+            j = 0
+            space1 = ''
+            space2 = '       '
+            space3 = '         '
+            # 清空界面原有考勤数据
+            for k in tv.get_children():
+                tv.delete(k)
+            with open("..\data\Attendance\Attendance_" + time + ".csv", 'r') as csvFile1:
+                reader1 = csv.reader(csvFile1)
+                # 将当日所有考勤信息输出到界面
+                for lines in reader1:
+                    j = j + 1
+                    if (j > 1):
+                        if (j % 2 != 0):
+                            if str(lines[2]) == new_name:
+                                iidd = '  ' + str(lines[0]) + '   '
+                                i = 0
+                                count = 16 - len(str(lines[2]))
+                                while i < count:
+                                    space1 += ' '
+                                    i = i + 1
+                                tv.insert('', 0, text=iidd, values=(space1+str(lines[2]), str(space2+lines[4]), str(space3+lines[6])))
+                                space1 = ''  # 重置
+            csvFile1.close()
+            window_select.destroy()
+        else:
+            mess._show(title='查询失败', message='该考勤时间（或用户名）不存在!')
+
 def tick():
     time_string = time.strftime('%H:%M:%S')
     clock.config(text=time_string)
     clock.after(200, tick)
-
 
 ######################################## 用户界面 ############################################
 
@@ -277,9 +324,12 @@ takeImg.place(x=50, y=320)
 Modeling = tk.Button(frame2, text="创建模型", command=ImgModel, fg="black"  ,bg="HotPink", width=34, height=1,
                      activebackground="white", font=('times', 15, ' bold '))
 Modeling.place(x=50, y=380)
-trackImg = tk.Button(frame1, text="点击考勤", command=attendance,fg="black"  ,bg="HotPink", width=35, height=1,
+Att = tk.Button(frame1, text="点击考勤", command=attendance,fg="black"  ,bg="HotPink", width=15, height=1,
                      activebackground="white", font=('times', 15, ' bold '))
-trackImg.place(x=30, y=50)
+Att.place(x=45, y=50)
+selection = tk.Button(frame1, text="查询考勤", command=select,fg="black"  ,bg="HotPink", width=15, height=1,
+                     activebackground="white", font=('times', 15, ' bold '))
+selection.place(x=260, y=50)
 quitWindow = tk.Button(frame1, text="退出", command=window.destroy, fg="black"  ,bg="HotPink", width=35, height=1,
                        activebackground="white", font=('times', 15, ' bold '))
 quitWindow.place(x=30, y=450)
